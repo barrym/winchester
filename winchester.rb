@@ -10,8 +10,6 @@ module Winchester
     end
 
     def self.find(req)
-      #controller = Home.new if controller.nil?
-
       path = req.env["REQUEST_PATH"].gsub(/^\//,'').split(/\//)
       if path.size == 1
         @controller = Home.new
@@ -22,15 +20,13 @@ module Winchester
       end
       @action = "index" if @action == ""
       
-      # action = req.env["REQUEST_PATH"].gsub(/^\//,'')
-      # action = "index" if action == ""
       return @controller, @action 
     end
   end
 
   class Dispatcher
     def initialize
-      puts "Init"
+      puts "Dispatcher Init"
     end
 
     def call(env)
@@ -48,13 +44,21 @@ module Winchester
   class Controller
 
     def render_page(method_name, env)
-      @env = env
 
-      render(method_name)
+      self.send(method_name.to_sym)
+
+      if @render_text
+        @render_text
+      else
+        render(method_name)
+      end
+    end
+
+    def text(text)
+      @render_text = text
     end
 
     def render(method_name)
-      self.send(method_name.to_sym)
       file_name = "#{method_name}.html.erb"
 
       if File.exist?(file_name)
@@ -82,6 +86,10 @@ class Home < Winchester::Controller
 
   def foo
     @name = "Barry"
+  end
+
+  def test_text
+    text "Lols #{Time.now}"
   end
 
 end
