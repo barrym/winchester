@@ -1,0 +1,16 @@
+#!/usr/bin/env ruby
+require 'rubygems'
+require 'rack'
+require 'winchester'
+
+
+app = Rack::Builder.new {
+  use Rack::ShowExceptions
+  use Rack::ContentLength
+  use Rack::Lint
+  map '/' do
+    run Winchester::Dispatcher.new
+  end
+}
+
+Rack::Handler::Thin.run(app)
