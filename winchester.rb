@@ -2,6 +2,32 @@ require 'erb'
 
 module Winchester
 
+  class Routes
+    def add(path)
+    end
+
+    def routes
+    end
+
+    def self.find(req)
+      #controller = Home.new if controller.nil?
+
+      path = req.env["REQUEST_PATH"].gsub(/^\//,'').split(/\//)
+      if path.size == 1
+        @controller = Home.new
+        @action = path[0]
+      else
+        @controller = Kernel.const_get(path[0].capitalize).new
+        @action = path[1]
+      end
+      @action = "index" if @action == ""
+      
+      # action = req.env["REQUEST_PATH"].gsub(/^\//,'')
+      # action = "index" if action == ""
+      return @controller, @action 
+    end
+  end
+
   class Dispatcher
     def initialize
       puts "Init"
@@ -11,12 +37,9 @@ module Winchester
       req = Rack::Request.new(env)
       res = Rack::Response.new
 
-      @controller = Home.new
-      
-      @method_name = req.env["REQUEST_PATH"].gsub(/^\//,'')
-      @method_name = "index" if @method_name == ""
+      controller, action = Routes.find(req)
 
-      res.write(@controller.render_page(@method_name, req.env))
+      res.write(controller.render_page(action, req.env))
       res.finish
     end
 
@@ -31,7 +54,6 @@ module Winchester
     end
 
     def render(method_name)
-      #@params = params
       self.send(method_name.to_sym)
       file_name = "#{method_name}.html.erb"
 
@@ -44,7 +66,7 @@ module Winchester
     end
 
     def method_missing(symbol, *args)
-      @error =  "also, missing method"
+      @error =  "<p>also, missing method #{symbol}</p>"
     end 
 
     def params
@@ -64,3 +86,7 @@ class Home < Winchester::Controller
 
 end
 
+class Blah < Winchester::Controller
+  def foo
+  end
+end
